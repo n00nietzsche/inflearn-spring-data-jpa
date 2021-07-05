@@ -17,6 +17,13 @@ public class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
 
     @Test
+    void printMemberRepository() {
+        // class com.sun.proxy.$Proxy95
+        // 스프링 데이터 JPA가 구현 클래스를 만들어서 꽂아버림
+        System.out.println("memberRepository = " + memberRepository.getClass());
+    }
+
+    @Test
     void testMember() {
         Member member = new Member("memberA");
         Member savedMember = memberRepository.save(member);
