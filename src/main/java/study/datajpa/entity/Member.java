@@ -13,6 +13,13 @@ import javax.persistence.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 // `@ToString` 에 연관관계 필드 찍으면 무한참조될 수 있으니까 조심하기
 @ToString(of = {"id", "username", "age"})
+@NamedQuery(
+        // 관례상 이렇게 준 것이며, 관례를 따르지 않아도 에러가 나거나 하진 않음.
+        // XML에 작성하는 방법도 있긴 함
+        // 애초에 실무에서 잘 쓰지 않는 기능이긴 함
+        name = "Member.findByUsername",
+        query = "select m from Member m where m.username = :username"
+)
 public class Member {
     // 실무에서는 가급적 Setter 사용 안함
     @Id @GeneratedValue
