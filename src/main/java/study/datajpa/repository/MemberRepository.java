@@ -42,4 +42,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // `@NamedQuery`에서 작성한 것처럼 JPQL 에 명확히 파라미터(:username)가 있다면,
     // `@Param` 애노테이션을 사용해야 한다.
     List<Member> findByUsername(@Param("username") String username);
+
+    // 메소드에 `@Query` 바로 작성
+    // 1. 메소드 이름으로 만들던 방법에서는 파라미터가 많아지면 이름이 너무 복잡해지는 단점이 있었음
+    // 2. 복잡한 `JPQL` 이 필요할 때 직접 넣어서 문제를 해결할 수도 있다.
+    // 3. 굳이 실행을 안해도 애플리케이션 로딩 시점에 에러를 잡아준다. (애플리케이션 로딩 시점에 파싱을 하기 때문에)
+    // 조금 복잡해진다 싶으면 `@Query`를 이용해주는 것이 효율적이다. `JPQL`로 풀어주면 된다.
+    @Query("select m from Member m where m.username = :username and m.age = :age")
+    List<Member> findUser(@Param("username") String username, @Param("age") int age);
 }
