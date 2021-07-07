@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
+import study.datajpa.entity.Team;
 
 import javax.transaction.Transactional;
 
@@ -17,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Rollback(value = false)
 public class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
+    @Autowired TeamRepository teamRepository;
 
     @Test
     void printMemberRepository() {
@@ -130,5 +133,40 @@ public class MemberRepositoryTest {
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.get(0).getUsername()).isEqualTo("AAA");
         assertThat(result.get(0).getAge()).isEqualTo(10);
+    }
+    
+    @Test
+    public void findUsernameList() {
+        Member m1 = new Member("AAA", 10, null);
+        Member m2 = new Member("BBB", 10, null);
+
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<String> usernameList = memberRepository.findUsernameList();
+
+        for (String s : usernameList) {
+            System.out.println("s = " + s);
+        }
+    }
+
+    @Test
+    public void findMemberDto() {
+        Team t1 = new Team("ATeam");
+        Team t2 = new Team("BTeam");
+
+        teamRepository.save(t1);
+        teamRepository.save(t2);
+
+        Member m1 = new Member("AAA", 10, t1);
+        Member m2 = new Member("BBB", 10, t2);
+
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        List<MemberDto> memberDto = memberRepository.findMemberDto();
+        for (MemberDto dto : memberDto) {
+            System.out.println(dto);
+        }
     }
 }
