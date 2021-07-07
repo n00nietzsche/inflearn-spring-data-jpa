@@ -63,4 +63,23 @@ public class MemberJpaRepository {
                 .setParameter("username", username)
                 .getResultList();
     }
+
+    // offset -> 몇 번째부터
+    // limit -> 몇 개를 가져와
+    // DB가 바뀌어도 Dialect 에 의해 DB 벤더에 맞는 쿼리가 나감
+    public List<Member> findByPage(int age, int offset, int limit) {
+        return em.createQuery("select m from Member m where m.age = :age order by m.username desc", Member.class)
+                .setParameter("age", age)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
+    // 보통 페이징에서 몇번째 페이지인지 알기 위해 가져오게 돼있음
+    // 여기서는 당연히 쿼리에 `sorting`이 필요 없음
+    public long totalCount(int age) {
+        return em.createQuery("select count(m) from Member m where m.age = :age", Long.class)
+                .setParameter("age", age)
+                .getSingleResult();
+    }
 }
