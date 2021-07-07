@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -187,6 +188,22 @@ public class MemberRepositoryTest {
         for (Member byName : byNames) {
             System.out.println("byName = " + byName);
         }
+    }
 
+    @Test
+    public void returnType() {
+        Member m1 = new Member("AAA", 10, null);
+        Member m2 = new Member("BBB", 10, null);
+        Member m3 = new Member("CCC", 20, null);
+
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+        memberRepository.save(m3);
+
+        List<Member> members = memberRepository.findMembersByUsername("");
+        assertThat(members).isNotEqualTo(null);
+
+        Member member = memberRepository.findMemberByUsername("");
+        assertThat(member).isEqualTo(null);
     }
 }
