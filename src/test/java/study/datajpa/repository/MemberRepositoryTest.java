@@ -10,6 +10,7 @@ import study.datajpa.entity.Team;
 
 import javax.transaction.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -168,5 +169,24 @@ public class MemberRepositoryTest {
         for (MemberDto dto : memberDto) {
             System.out.println(dto);
         }
+    }
+
+    @Test
+    public void findByNames() {
+        Member m1 = new Member("AAA", 10, null);
+        Member m2 = new Member("BBB", 10, null);
+        Member m3 = new Member("CCC", 20, null);
+
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+        memberRepository.save(m3);
+
+        List<String> names = Arrays.asList("AAA", "BBB", "CCC");
+        List<Member> byNames = memberRepository.findByNames(names);
+
+        for (Member byName : byNames) {
+            System.out.println("byName = " + byName);
+        }
+
     }
 }

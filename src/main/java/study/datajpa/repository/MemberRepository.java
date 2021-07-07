@@ -58,4 +58,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // 마치 객체를 생성해서 반환하는 것 같은 문법을 써야 Dto로 반환이 가능하다.
     @Query("select new study.datajpa.dto.MemberDto(m.id, m.username, t.name) from Member m join m.team t")
     List<MemberDto> findMemberDto();
+
+    @Query("select m from Member m where m.username in :names")
+    List<Member> findByNames(@Param("names") List<String> names);
 }
