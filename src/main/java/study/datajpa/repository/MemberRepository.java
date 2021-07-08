@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -78,4 +79,15 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query(value = "select m from Member m left join m.team t",
             countQuery = "select count(m) from Member m")
     Page<Member> findSplitCountByAge(int age, Pageable pageable);
+
+    // `@Modifying`을 빼면 에러가 나는데, `invalid data access`, `not supported DML` 등의 에러가 난다.
+    @Modifying(clearAutomatically = true)
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
+    // JPA의 벌크성 API는 주의점이 있다.
+    // 기본적으로 JPA는 자바 객체 엔티티를 기반으로 지속적인 동기화를 통해 여러가지 변화가 이루어진다.
+    // 그런데 벌크성 API는 바로 DB에 날아가는 것이기 때문에, 이러한 기본 매커니즘을 위배하는 행동이다.
+    // 그래서 언제나 엔티티를 수정하는 것이 아니라, DB 데이터를 직접 수정한다는 것을 머릿속에 새겨둬야 한다.
+    // `@Modifying`의 `clearAutomatically`를 `true`로 만들어주면, 실수를 방지하는데 도움이 된다.
 }

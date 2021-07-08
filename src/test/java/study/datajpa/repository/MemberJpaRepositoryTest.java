@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import study.datajpa.entity.Member;
 
 import javax.transaction.Transactional;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Transactional // JPA의 모든 행위는 `@Transactional` 안에서 이루어져야 한다.
+@Rollback(value = false)
 class MemberJpaRepositoryTest {
     @Autowired MemberJpaRepository memberJpaRepository;
 
@@ -119,4 +121,15 @@ class MemberJpaRepositoryTest {
         assertThat(totalCount).isEqualTo(6);
     }
 
+    @Test
+    public void bulkUpdate() {
+        memberJpaRepository.save(new Member("member1", 10, null));
+        memberJpaRepository.save(new Member("member2", 15, null));
+        memberJpaRepository.save(new Member("member3", 17, null));
+        memberJpaRepository.save(new Member("member4", 40, null));
+        memberJpaRepository.save(new Member("member5", 31, null));
+
+        int resultCount = memberJpaRepository.bulkAgePlus(20);
+        assertThat(resultCount).isEqualTo(2);
+    }
 }

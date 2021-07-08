@@ -12,6 +12,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import java.util.Arrays;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext EntityManager entityManager;
 
     @Test
     void printMemberRepository() {
@@ -307,5 +310,26 @@ public class MemberRepositoryTest {
 
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "username"));
         Page<Member> memberPage = memberRepository.findSplitCountByAge(age, pageRequest);
+    }
+
+    @Test
+    public void bulkUpdate() {
+        memberRepository.save(new Member("member1", 10, null));
+        memberRepository.save(new Member("member2", 15, null));
+        memberRepository.save(new Member("member3", 17, null));
+        memberRepository.save(new Member("member4", 40, null));
+        Member member5Original = new Member("member5", 31, null);
+        memberRepository.save(member5Original);
+
+        int resultCount = memberRepository.bulkAgePlus(20);
+
+        // Entity가 변경된 것이 아니라서 1차캐시에 남아있던 `member5`는 여전히 `age`가 `31`인 상태이다.
+        Member member5 = memberRepository.findByUsername("member5").get(0);
+
+        // 메모리에 올라간 엔티티는 DB데이터의 변경사항을 모르기 때문에 이 결과는 31이 나온다.
+        // System.out.println("member51.getAge() = " + member5Original.getAge());
+
+        assertThat(member5.getAge()).isEqualTo(32);
+        assertThat(resultCount).isEqualTo(2);
     }
 }
