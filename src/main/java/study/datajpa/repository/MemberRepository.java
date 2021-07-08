@@ -1,5 +1,8 @@
 package study.datajpa.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -66,4 +69,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findMembersByUsername(String username); // 컬렉션
     Member findMemberByUsername(String username); // 단건
     Optional<Member> findOptionalMemberByUsername(String username); // 단건
+
+    // 페이징 쿼리 등이 표준화되면서 개발자는 더욱 더 비즈니스에 관련된 복잡한 쿼리에만 집중할 수 있게 되었다.
+    Page<Member> findByAge(int age, Pageable pageable);
+    Slice<Member> findSliceByAge(int age, Pageable pageable);
+    List<Member> findListByAge(int age, Pageable pageable);
+    // `totalCount`를 매기는데 불필요한 조인을 사용함으로써 성능저하가 발생하는 것에 대한 대책으로 나온 방법
+    @Query(value = "select m from Member m left join m.team t",
+            countQuery = "select count(m) from Member m")
+    Page<Member> findSplitCountByAge(int age, Pageable pageable);
 }

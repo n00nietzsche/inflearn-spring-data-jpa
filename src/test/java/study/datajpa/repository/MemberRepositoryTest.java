@@ -3,6 +3,10 @@ package study.datajpa.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
@@ -205,5 +209,103 @@ public class MemberRepositoryTest {
 
         Member member = memberRepository.findMemberByUsername("");
         assertThat(member).isEqualTo(null);
+    }
+
+    @Test
+    public void paging() {
+        memberRepository.save(new Member("member1", 10, null));
+        memberRepository.save(new Member("member2", 10, null));
+        memberRepository.save(new Member("member3", 10, null));
+        memberRepository.save(new Member("member4", 10, null));
+        memberRepository.save(new Member("member5", 10, null));
+        memberRepository.save(new Member("member6", 10, null));
+
+        int age = 10;
+        int limit = 3;
+
+        // 주의! 스프링 데이터 JPA는 페이지를 0부터 시작한다.
+        // 쿼리의 조건이 복잡하면 나중에는 `Sort.by()`가 제대로 안 풀릴 수 있으니 주의하자.
+        // 사실 단순히 앞에꺼 3개 조회는 `.findTop3()` 가 가장 효율적이다.
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "username"));
+
+
+        Page<Member> memberPage = memberRepository.findByAge(age, pageRequest);
+        // 참고로 여기 페이징에서 찾은 `Member`도 물론 API 에서 엔티티 그대로 내리면 절대 안된다.
+        // 무조건 DTO로 필요한 정보만 빼서 내려야 한다.
+        // 아래와 같은 방식으로 할 수 있다.
+        Page<MemberDto> map = memberPage.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
+
+        List<Member> content = memberPage.getContent();
+
+        assertThat(content.size()).isEqualTo(limit);
+        assertThat(memberPage.getTotalElements()).isEqualTo(6);
+        assertThat(pageRequest.getPageNumber()).isEqualTo(0);
+        assertThat(memberPage.getTotalPages()).isEqualTo(2);
+        assertThat(memberPage.isFirst()).isEqualTo(true);
+        assertThat(memberPage.hasNext()).isEqualTo(true);
+    }
+
+    @Test
+    public void pagingSlice() {
+        memberRepository.save(new Member("member1", 10, null));
+        memberRepository.save(new Member("member2", 10, null));
+        memberRepository.save(new Member("member3", 10, null));
+        memberRepository.save(new Member("member4", 10, null));
+        memberRepository.save(new Member("member5", 10, null));
+        memberRepository.save(new Member("member6", 10, null));
+
+        int age = 10;
+        int limit = 3;
+
+        // 주의! 스프링 데이터 JPA는 페이지를 0부터 시작한다.
+        // `Slice`는 처음부터 `N+1`을 요청해서 다음 페이지가 있는지 확인한다
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "username"));
+
+        // `Page`가 `Slice`를 상속하는 타입이기 때문에, `Page`로 `Slice`가 받아지니 주의하자.
+        // 설계상 `Slice`를 상속받아 전체 `limit`을 -1하고 전체 개수를 추가로 조회하면 `Page`가 된다.
+        Slice<Member> memberPage = memberRepository.findSliceByAge(age, pageRequest);
+        List<Member> content = memberPage.getContent();
+
+        assertThat(content.size()).isEqualTo(limit);
+        assertThat(pageRequest.getPageNumber()).isEqualTo(0);
+        assertThat(memberPage.isFirst()).isEqualTo(true);
+        assertThat(memberPage.hasNext()).isEqualTo(true);
+    }
+
+    @Test
+    public void pagingList() {
+        memberRepository.save(new Member("member1", 10, null));
+        memberRepository.save(new Member("member2", 10, null));
+        memberRepository.save(new Member("member3", 10, null));
+        memberRepository.save(new Member("member4", 10, null));
+        memberRepository.save(new Member("member5", 10, null));
+        memberRepository.save(new Member("member6", 10, null));
+
+        int age = 10;
+        int limit = 3;
+
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "username"));
+        // 그냥 limit, offset, 정렬(`PageRequest`)만 이용하고 싶다면 `List`로 반환하면 된다.
+        List<Member> memberPage = memberRepository.findListByAge(age, pageRequest);
+
+        for (Member member : memberPage) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    public void pagingListSplitCount() {
+        memberRepository.save(new Member("member1", 10, null));
+        memberRepository.save(new Member("member2", 10, null));
+        memberRepository.save(new Member("member3", 10, null));
+        memberRepository.save(new Member("member4", 10, null));
+        memberRepository.save(new Member("member5", 10, null));
+        memberRepository.save(new Member("member6", 10, null));
+
+        int age = 10;
+        int limit = 3;
+
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "username"));
+        Page<Member> memberPage = memberRepository.findSplitCountByAge(age, pageRequest);
     }
 }
