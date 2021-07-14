@@ -20,7 +20,8 @@ import java.util.Optional;
 // 각각 엔티티와 기본키의 타입을 넣어준다.
 
 // 인터페이스고 구현 코드가 없는데 어떻게 실행되는 걸까?
-public interface MemberRepository extends JpaRepository<Member, Long> {
+
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     // 메소드 이름으로 쿼리 생성
     // 관례를 가진 메소드 이름으로 자동으로 쿼리 생성이 가능함

@@ -479,4 +479,16 @@ public class MemberRepositoryTest {
         // 실시간 트래픽이 많은 서비스에서는 LOCK 을 걸지 않는 것이 좋다.
         // 걸어야만 한다면 OPTIMISTIC LOCK 과 같은 versioning 이라는 매커니즘으로 해결하는 방법으로 풀거나 해야 한다.
     }
+
+    @Test
+    public void callCustom() {
+        // 쿼리 DSL에서 많이 사용한다.
+        // 커스텀을 하면 Spring Data JPA에서 지원하는 기능 이외에 내가 직접 메소드를 작성하여 커스텀할 수 있다.
+        // 참고로 항상 사용자 정의 리포지토리가 필요한 것은 절대 아니다.
+        // 모든 것을 하나의 도구로 해결하려하지마라
+        // 실무에서는 핵심 비즈니스 로직 리포지토리와 화면에 맞춘 쿼리는 나누는 것이 개발하기 좋다.
+        // 화면에 맞춘 쿼리는 화면을 고칠 때 쿼리도 고치게 되므로 수정의 라이프사이클도 다르다.
+        // 모든 것을 스프링 데이터 JPA로 해결할 필요 없고, 일반 리포지토리 클래스를 만들어 해결하는 것도 좋은 방법이다.
+        List<Member> members = memberRepository.findMemberCustom();
+    }
 }
