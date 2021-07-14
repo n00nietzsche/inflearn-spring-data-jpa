@@ -20,6 +20,7 @@ import javax.persistence.*;
         name = "Member.findByUsername",
         query = "select m from Member m where m.username = :username"
 )
+@NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
 public class Member {
     // 실무에서는 가급적 Setter 사용 안함
     @Id @GeneratedValue

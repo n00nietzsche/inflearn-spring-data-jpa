@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import javax.persistence.Entity;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,4 +92,27 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // 그런데 벌크성 API는 바로 DB에 날아가는 것이기 때문에, 이러한 기본 매커니즘을 위배하는 행동이다.
     // 그래서 언제나 엔티티를 수정하는 것이 아니라, DB 데이터를 직접 수정한다는 것을 머릿속에 새겨둬야 한다.
     // `@Modifying`의 `clearAutomatically`를 `true`로 만들어주면, 실수를 방지하는데 도움이 된다.
+
+
+    // `스프링 데이터 JPA`는 `join fetch`를 이용하려면 매번 `JPQL`을 직접 입력해줘야할까?
+    //   -> 엔티티 그래프를 이용해 해결하자.
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = "team")
+    // `스프링 데이터 JPA`를 이용한 `join fetch` 가능
+    // 내부적으로 `join fetch`를 쓴다.
+    List<Member> findAll();
+
+    // 사용자 정의 쿼리에 `@EntityGraph`를 해도 `join fetch`가 됨
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    @EntityGraph("Member.all")
+    List<Member> findNamedEntityGraphByUsername(@Param("username") String username);
 }

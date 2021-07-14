@@ -332,4 +332,107 @@ public class MemberRepositoryTest {
         assertThat(member5.getAge()).isEqualTo(32);
         assertThat(resultCount).isEqualTo(2);
     }
+
+    @Test
+    public void findMemberLazy() {
+        // given
+        // member1 -> teamA
+        // member2 -> teamB
+
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 15, teamB);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // 영속성 컨텍스트의 1차 캐시와 쓰기지연 저장소 초기화
+        entityManager.flush();
+        entityManager.clear();
+
+        // 조인을 적절히 해주지 않으면, `N+1` 문제가 발생한다.
+        // ORM이 만들어주는 문제
+        List<Member> members = memberRepository.findAll();
+
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            // 지연로딩이 되어 있으면 가짜객체(`HibernateProxy` 객체)만 가지고 있다가,
+            // 실제로 값을 가져올 때 진짜 객체를 넣음
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+    }
+
+    @Test
+    public void findMemberFetchJoinTest() {
+        // given
+        // member1 -> teamA
+        // member2 -> teamB
+
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 15, teamB);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // 영속성 컨텍스트의 1차 캐시와 쓰기지연 저장소 초기화
+        entityManager.flush();
+        entityManager.clear();
+
+        // `join fetch`를 이용하면, `left outer join` 으로 다 가져와버린다.
+        List<Member> members = memberRepository.findMemberFetchJoin();
+
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            // 클래스도 지연로딩이 아니기 때문에 프록시가 아니라 그냥 JPA 엔티티가 잡힌다.
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+    }
+
+    @Test
+    public void findEntityGraphByUsername() {
+        // given
+        // member1 -> teamA
+        // member2 -> teamB
+
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member1", 15, teamB);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // 영속성 컨텍스트의 1차 캐시와 쓰기지연 저장소 초기화
+        entityManager.flush();
+        entityManager.clear();
+
+        // 스프링 데이터 JPA의 메소드에도 적용 가능
+//        List<Member> members = memberRepository.findEntityGraphByUsername("member1");
+        List<Member> members = memberRepository.findNamedEntityGraphByUsername("member1");
+
+
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            // 클래스도 지연로딩이 아니기 때문에 프록시가 아니라 그냥 JPA 엔티티가 잡힌다.
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+    }
 }
