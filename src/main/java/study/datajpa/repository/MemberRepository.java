@@ -3,16 +3,15 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
 import javax.persistence.Entity;
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.util.List;
 import java.util.Optional;
 
@@ -115,4 +114,17 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @EntityGraph("Member.all")
     List<Member> findNamedEntityGraphByUsername(@Param("username") String username);
+
+    // 이렇게 세팅하면, JPA가 제공하는 쿼리 힌트를 이용할 수 있다.
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+
+    @QueryHints(value = {@QueryHint(name = "org.hibernate.readOnly", value = "true")},
+                forCounting = true)
+    List<Member> findPageByUsername(String username, Pageable pageable);
+
+
+    // JPA에서 LOCK을 지원한다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }

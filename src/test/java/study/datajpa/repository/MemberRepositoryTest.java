@@ -1,5 +1,6 @@
 package study.datajpa.repository;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +17,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -434,5 +436,47 @@ public class MemberRepositoryTest {
             System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
             System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
         }
+    }
+
+    @Test
+    public void queryHint() {
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        // flush() 를 하면 DB에 insert 쿼리가 나감
+        // 1차캐시의 변경사항은 DB에 동기화되지만, 1차캐시가 사라지진 않음
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        // readOnly 로 불러오면, 말도없이 더티체크가 안된다. (실수하기 좋은듯)
+        // 사실 근데 readOnly로 해도 크게 성능이득이 없을 수도 있다.
+        // 본인이 직접 성능테스트를 해보고 결정하자.
+        // 그리고 조회성능이 안나온다면 앞쪽에 미리 Redis라던지 캐시를 깔아야 한다.
+        Member findMember = memberRepository.findReadOnlyByUsername("member1");
+        findMember.setUsername("member2");
+        entityManager.flush();
+        // flush()를 하면 상태가 바뀐 것을 인지해서 update 쿼리가 나간다.
+        // 더티체킹을 이용하는 것인데
+        // 더티체킹의 치명적인 단점은 원본이 있어야 한다는 점이다.
+        // 그래서 사실 객체를 두개 관리하고 있다.
+        // 내부적으로 성능 최적화는 하겠지만 객체를 2개 보유하고 있어야만 한다.
+        // 즉, 메모리를 더 먹는다.
+        // 왜냐하면 원본 객체와 바뀐 객체 두개를 보유하고 있지 않다면,
+        // 서로 비교하여 바뀐 부분을 찾을 수가 없다.
+    }
+
+    @Test
+    public void lock() {
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Member> findMember = memberRepository.findLockByUsername("member1");
+        // 쿼리 마지막에 `for update` 라는 것이 붙는다.
+        // 실시간 트래픽이 많은 서비스에서는 LOCK 을 걸지 않는 것이 좋다.
+        // 걸어야만 한다면 OPTIMISTIC LOCK 과 같은 versioning 이라는 매커니즘으로 해결하는 방법으로 풀거나 해야 한다.
     }
 }

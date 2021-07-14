@@ -51,6 +51,11 @@ public class Member {
         }
     }
 
+    public Member(String username, int age) {
+        this.username = username;
+        this.age = age;
+    }
+
     public void changeTeam(Team team) {
         this.team = team;
         // 팀에 있는 멤버에도 추가를 해주어야 함.
