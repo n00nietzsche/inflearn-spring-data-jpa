@@ -1,9 +1,16 @@
 package study.datajpa.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.repository.MemberRepository;
 
@@ -12,6 +19,7 @@ import javax.annotation.PostConstruct;
 @RestController
 @RequiredArgsConstructor
 public class MemberController {
+    private final ModelMapper modelMapper;
     private final MemberRepository memberRepository;
 
     @GetMapping("/members/{id}")
@@ -31,9 +39,24 @@ public class MemberController {
         return member.getUsername();
     }
 
+    @GetMapping("/members")
+    // `@PageableDefault`를 이용해서 페이징 기본값들 설정 가능
+    public Page<MemberDto> list(@PageableDefault(size = 5, sort = "age", direction = Sort.Direction.DESC) Pageable pageable) {
+        // 어떤 find든 뒤에 pageable 만 넘겨주면 가능하다.
+        // 메소드 이름으로 쿼리 생성한 기타 메소드도 가능하다. ex) findByUsername...
+        // PageRequest 라는 객체를 이용하는 것이기 때문에, PageRequest 객체를 잘 보면 여러가지 기능을 사용할 수 있다.
+        // http://localhost:8080/members?page=0&size=3&sort=id,desc&sort=username,desc
+        // `Entity`를 `DTO`로 바꾸는 방법은 현재까지 발견한 방법 중에는 아래의 방법이 가장 편한 것 같다.
+        return memberRepository
+                .findAll(pageable)
+                .map(member -> modelMapper.map(member, MemberDto.class));
+    }
+
     @PostConstruct
     public void init() {
-        Member member = new Member("김똘똘");
-        memberRepository.save(member);
+        for(int i=0; i<100; i++){
+            Member member = new Member("김똘똘"+i, i);
+            memberRepository.save(member);
+        }
     }
 }
