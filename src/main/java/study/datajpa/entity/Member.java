@@ -21,7 +21,7 @@ import javax.persistence.*;
         query = "select m from Member m where m.username = :username"
 )
 @NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
-public class Member {
+public class Member extends BaseEntity{
     // 실무에서는 가급적 Setter 사용 안함
     @Id @GeneratedValue
     // 관례상 테이블명_id 라는 이름을 컬럼 이름으로 많이 쓰기 때문에 설정해줌
