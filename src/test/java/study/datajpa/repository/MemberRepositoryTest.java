@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
@@ -490,5 +491,26 @@ public class MemberRepositoryTest {
         // 화면에 맞춘 쿼리는 화면을 고칠 때 쿼리도 고치게 되므로 수정의 라이프사이클도 다르다.
         // 모든 것을 스프링 데이터 JPA로 해결할 필요 없고, 일반 리포지토리 클래스를 만들어 해결하는 것도 좋은 방법이다.
         List<Member> members = memberRepository.findMemberCustom();
+    }
+
+    @Test
+    public void specBasic() {
+        Team teamA = new Team("teamA");
+        entityManager.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+
+        entityManager.persist(m1);
+        entityManager.persist(m2);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        Specification<Member> memberSpecification = MemberSpec.username("m1").and(MemberSpec.teamName("teamA"));
+        List<Member> members = memberRepository.findAll(memberSpecification);
+
+        Assertions.assertEquals(members.size(), 1);
     }
 }
