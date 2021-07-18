@@ -52,11 +52,11 @@ public class MemberController {
                 .map(member -> modelMapper.map(member, MemberDto.class));
     }
 
-    @PostConstruct
-    public void init() {
-        for(int i=0; i<100; i++){
-            Member member = new Member("김똘똘"+i, i);
-            memberRepository.save(member);
-        }
-    }
+//    @PostConstruct
+//    public void init() {
+//        for(int i=0; i<100; i++){
+//            Member member = new Member("김똘똘"+i, i);
+//            memberRepository.save(member);
+//        }
+//    }
 }
