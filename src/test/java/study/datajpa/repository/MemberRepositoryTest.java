@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 import study.datajpa.dto.MemberDto;
@@ -512,5 +509,37 @@ public class MemberRepositoryTest {
         List<Member> members = memberRepository.findAll(memberSpecification);
 
         Assertions.assertEquals(members.size(), 1);
+    }
+
+    @Test
+    public void queryByExample() {
+        Team teamA = new Team("teamA");
+        entityManager.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        entityManager.persist(m1);
+        entityManager.persist(m2);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 검색에 이용되는 객체를 `Probe`라 한다.
+        Member member = new Member("m1");
+        Team team = new Team("teamA");
+        member.setTeam(team);
+
+        // 이렇게 안해주면, 검색할 때 `age`는 기본값인 `0`이 들어가서 `username=m1`이며 `age=0`인 객체를 찾게 된다.
+        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("age");
+
+        Example<Member> example = Example.of(member, matcher);
+
+        // `JpaRepository`만 상속하면 `.findAll()`에서 `Example` 을 받을 수 있다.
+        // `Example`은 도메인 객체로 검색조건을 만드는 것이다.
+        // 여기까지만 보면 상당히 좋은 편이지만, 조인이 아쉽다. `inner join`만 가능하고 `outer join`이 안된다.
+        List<Member> members = memberRepository.findAll(example);
+
+        Assertions.assertEquals(members.size(), 1);
+        System.out.println("members = " + members.get(0));
     }
 }
