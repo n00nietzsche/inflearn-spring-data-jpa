@@ -542,4 +542,35 @@ public class MemberRepositoryTest {
         Assertions.assertEquals(members.size(), 1);
         System.out.println("members = " + members.get(0));
     }
+
+    @Test
+    public void projections() {
+        Team teamA = new Team("teamA");
+        entityManager.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        entityManager.persist(m1);
+        entityManager.persist(m2);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // username만 조회해올 수 있다.
+        List<NestedClosedProjections> result = memberRepository.findProjectionsByUsername("m1", NestedClosedProjections.class);
+
+        for (NestedClosedProjections nestedClosedProjections : result) {
+            // nestedClosedProjections = org.springframework.data.jpa.repository.query.AbstractJpaQuery$TupleConverter$TupleBackedMap@47cf922d
+            System.out.println("nestedClosedProjections = " + nestedClosedProjections);
+            String username = nestedClosedProjections.getUsername();
+            System.out.println("username = " + username);
+            String teamName = nestedClosedProjections.getTeam().getName();
+            System.out.println("name = " + teamName);
+        }
+
+//        for (UsernameOnlyDto usernameOnly : result) {
+//            // usernameOnly = org.springframework.data.jpa.repository.query.AbstractJpaQuery$TupleConverter$TupleBackedMap@24f77077
+//            System.out.println("usernameOnly = " + usernameOnly.getUsername());
+//        }
+    }
 }

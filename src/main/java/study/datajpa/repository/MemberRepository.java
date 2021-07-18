@@ -128,4 +128,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     // JPA에서 LOCK을 지원한다.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Member> findLockByUsername(String username);
+
+    // `Generic`으로 타입을 받아서 동적으로 타입을 결정하는 것을 동적 `Projection`이라고 한다.
+    <T> List<T> findProjectionsByUsername(@Param("username") String username, Class<T> type);
 }
